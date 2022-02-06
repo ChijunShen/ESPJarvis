@@ -3,10 +3,12 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <Wire.h>
+#include <HTTPClient.h> 
+#include <WiFiClient.h>
 #include <PubSubClient.h> 
 #include <Adafruit_GFX.h>   
 #include <Adafruit_SSD1306.h>
-
 
 #define SOFTWARE_VERSION "V0.1"
 #define SCREEN_TEXT_PER_LINE 21//每行显示多少字符
