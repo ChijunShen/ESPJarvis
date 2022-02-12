@@ -166,42 +166,42 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpuload/config",
                            config_json('cpuload'), qos=0)
             time.sleep(config.sleep_time)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cpuload", cpu_load, qos=1)
+        client.publish(config.mqtt_topic_prefix + "/cpuload", cpu_load, qos=1)
         time.sleep(config.sleep_time)
     if config.cpu_temp:
         if config.discovery_messages:
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cputemp/config",
                            config_json('cputemp'), qos=0)
             time.sleep(config.sleep_time)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cputemp", cpu_temp, qos=1)
+        client.publish(config.mqtt_topic_prefix + "/cputemp", cpu_temp, qos=1)
         time.sleep(config.sleep_time)
     if config.used_space:
         if config.discovery_messages:
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_diskusage/config",
                            config_json('diskusage'), qos=0)
             time.sleep(config.sleep_time)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/diskusage", used_space, qos=1)
+        client.publish(config.mqtt_topic_prefix + "/diskusage", used_space, qos=1)
         time.sleep(config.sleep_time)
     if config.voltage:
         if config.discovery_messages:
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_voltage/config",
                            config_json('voltage'), qos=0)
             time.sleep(config.sleep_time)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/voltage", voltage, qos=1)
+        client.publish(config.mqtt_topic_prefix +  "/voltage", voltage, qos=1)
         time.sleep(config.sleep_time)
     if config.swap:
         if config.discovery_messages:
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_swap/config",
                            config_json('swap'), qos=0)
             time.sleep(config.sleep_time)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/swap", swap, qos=1)
+        client.publish(config.mqtt_topic_prefix +  "/swap", swap, qos=1)
         time.sleep(config.sleep_time)
     if config.memory:
         if config.discovery_messages:
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_memory/config",
                            config_json('memory'), qos=0)
             time.sleep(config.sleep_time)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/memory", memory, qos=1)
+        client.publish(config.mqtt_topic_prefix +  "/memory", memory, qos=1)
         time.sleep(config.sleep_time)
     if config.sys_clock_speed:
         if config.discovery_messages:
@@ -209,17 +209,17 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
                 "homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_sys_clock_speed/config",
                 config_json('sys_clock_speed'), qos=0)
             time.sleep(config.sleep_time)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/sys_clock_speed", sys_clock_speed, qos=1)
+        client.publish(config.mqtt_topic_prefix +  "/sys_clock_speed", sys_clock_speed, qos=1)
         time.sleep(config.sleep_time)
     if config.uptime:
         if config.discovery_messages:
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime_days/config",
                            config_json('uptime_days'), qos=0)
             time.sleep(config.sleep_time)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime_hours", uptime_hours, qos=1)
+        client.publish(config.mqtt_topic_prefix +  "/uptime_hours", uptime_hours, qos=1)
         time.sleep(config.sleep_time)
     if config.gpu_freq:
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/gpu_freq", gpu_freq , qos=1)
+        client.publish(config.mqtt_topic_prefix +  "/gpu_freq", gpu_freq , qos=1)
         time.sleep(config.sleep_time)        
         
     # disconnect from mqtt server
@@ -286,4 +286,4 @@ if __name__ == '__main__':
             bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_hours)
         else:
             publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_hours,gpu_freq)
-        time.sleep(15)
+        time.sleep(10)

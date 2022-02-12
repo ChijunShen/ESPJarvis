@@ -1,7 +1,7 @@
 from random import randrange
 
 # MQTT server configuration
-mqtt_host = "192.168.0.18"
+mqtt_host = "192.168.0.17"
 mqtt_user = "test"
 mqtt_password = "2022"
 mqtt_port = "1883"
