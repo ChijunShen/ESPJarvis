@@ -10,7 +10,7 @@
 #include <Adafruit_GFX.h>   
 #include <Adafruit_SSD1306.h>
 
-#define SOFTWARE_VERSION "V0.1"
+#define SOFTWARE_VERSION "V0.2"
 #define SCREEN_TEXT_PER_LINE 21//每行显示多少字符
 #define SCREEN_LINE_OF_TEXT 8//显示多少行字符
 
@@ -31,6 +31,8 @@ class ESPJarvis {
         void setMaxGPUFreq(int MaxGPUFreq);
 		void showVersion();
 		void printMSG(int lineNumber, const char* text);
+		void setMqttTopicPrefix(String Prefix);
+		String getMqttTopicPrefix();
     private:
         WiFiClient esp32;         
         PubSubClient client;     
@@ -40,6 +42,7 @@ class ESPJarvis {
         String sBrokerClientID;   
         String sBrokerClientName;       
         String sBrokerClientPassword;    
+		String _sMqttTopicPrefix = "rpi";
         char cMQTTPayload[100];
 		char cScreenBuffer[SCREEN_TEXT_PER_LINE*SCREEN_LINE_OF_TEXT+1];
         String sCpuLoad; 

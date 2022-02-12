@@ -59,14 +59,14 @@ bool ESPJarvis::connectMQTTBroker(String sClientName, String sClientPassword, St
     client.setServer(sServer.c_str(), iPort);
     client.setCallback(std::bind(&ESPJarvis::MQTTCallbackFunction, this,  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     if (client.connect(sClientID.c_str(), sClientName.c_str(), sClientPassword.c_str())) {
-         client.subscribe("rpi/raspberrypi/cpuload",iBrokerQoS);
-         client.subscribe("rpi/raspberrypi/cputemp",iBrokerQoS);
-         client.subscribe("rpi/raspberrypi/diskusage",iBrokerQoS);
-         client.subscribe("rpi/raspberrypi/gpu_freq",iBrokerQoS);
-         client.subscribe("rpi/raspberrypi/memory",iBrokerQoS);
-         client.subscribe("rpi/raspberrypi/swap",iBrokerQoS);
-         client.subscribe("rpi/raspberrypi/uptime_hours",iBrokerQoS);
-         client.subscribe("rpi/raspberrypi/sys_clock_speed",iBrokerQoS);
+         client.subscribe((_sMqttTopicPrefix + "/cpuload").c_str(),iBrokerQoS);
+         client.subscribe((_sMqttTopicPrefix + "/cputemp").c_str(),iBrokerQoS);
+         client.subscribe((_sMqttTopicPrefix + "/diskusage").c_str(),iBrokerQoS);
+         client.subscribe((_sMqttTopicPrefix + "/gpu_freq").c_str(),iBrokerQoS);
+         client.subscribe((_sMqttTopicPrefix + "/memory").c_str(),iBrokerQoS);
+         client.subscribe((_sMqttTopicPrefix + "/swap").c_str(),iBrokerQoS);
+         client.subscribe((_sMqttTopicPrefix + "/uptime_hours").c_str(),iBrokerQoS);
+         client.subscribe((_sMqttTopicPrefix + "/sys_clock_speed").c_str(),iBrokerQoS);
          return true;
      } else {
          return false;
@@ -336,5 +336,12 @@ void ESPJarvis::initScreenBuffer(){
     cScreenBuffer[i]=' ';    
   }
   cScreenBuffer[SCREEN_TEXT_PER_LINE*SCREEN_LINE_OF_TEXT]=0;  
+}
+
+void ESPJarvis::setMqttTopicPrefix(String Prefix){
+    _sMqttTopicPrefix = Prefix;
+}
+String ESPJarvis::getMqttTopicPrefix(){
+    return _sMqttTopicPrefix;
 }
 
