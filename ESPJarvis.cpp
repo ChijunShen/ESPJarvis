@@ -13,14 +13,29 @@ ESPJarvis::ESPJarvis(String sServer, int iPort) {
 }
 
 ESPJarvis::ESPJarvis(Adafruit_SSD1306 &screen, String sServer, int iPort){
-    _screen = &screen;
+    _screen_ssd1306 = &screen;
     sBrokerServer = sServer;
     iBrokerPort = iPort;
+    _bUseSSD1306 = true;
+    initScreenBuffer();    
+}
+
+ESPJarvis::ESPJarvis(Adafruit_ST7735 &screen, String sServer, int iPort){
+    _screen_st7735 = &screen;
+    sBrokerServer = sServer;
+    iBrokerPort = iPort;
+    _bUseST7735 = true;
     initScreenBuffer();    
 }
 
 void ESPJarvis::attachScreen(Adafruit_SSD1306 &screen){
-    _screen = &screen;
+    _screen_ssd1306 = &screen;
+    _bUseSSD1306 = true;
+}
+
+void ESPJarvis::attachScreen(Adafruit_ST7735 &screen){
+    _screen_st7735 = &screen;
+    _bUseST7735 = true;
 }
 
 void ESPJarvis::setClientData(String sClientID, String sClientName, String sClientPassword){
@@ -118,9 +133,14 @@ void ESPJarvis::drawArc(int x, int y, int start_angle, int seg_count, int rx, in
     int x3 = sx2 * rx + x;
     int y3 = sy2 * ry + y;
 
-
-    _screen->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
-    _screen->fillTriangle(x1, y1, x2, y2, x3, y3, WHITE);
+    if(_bUseSSD1306){
+        _screen_ssd1306->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
+        _screen_ssd1306->fillTriangle(x1, y1, x2, y2, x3, y3, WHITE);
+    }
+    if(_bUseST7735){
+        _screen_st7735->fillTriangle(x0, y0, x1, y1, x2, y2, ST77XX_BLUE);
+        _screen_st7735->fillTriangle(x1, y1, x2, y2, x3, y3, ST77XX_BLUE);
+    }
 
     // Copy segment end to sgement start for next segment
     x0 = x2;
@@ -150,167 +170,288 @@ void ESPJarvis::showCPUGPUPage(){
     if(iGPUDegree>360) iGPUDegree=360;
     int iCPUDegree = (int)(iClockSpeed*360/_iMaxClockSpeed);
     if(iCPUDegree>360) iCPUDegree=360;
-    _screen->clearDisplay();
-    drawArc(32, 32, 0, iGPUDegree, 32, 32, 4, WHITE);
-    drawArc(32, 32, iGPUDegree, 360, 28, 28, 1, WHITE);
-    _screen->setCursor(24,10);
-    _screen->print("GPU");
-    if(iGPUFreq!=0){
-        if(iGPUFreq>=100){
-            _screen->setCursor(13,30);
+    if(_bUseSSD1306){
+         _screen_ssd1306->clearDisplay();
+        drawArc(32, 32, 0, iGPUDegree, 32, 32, 4, WHITE);
+        drawArc(32, 32, iGPUDegree, 360, 28, 28, 1, WHITE);
+        _screen_ssd1306->setCursor(24,10);
+        _screen_ssd1306->print("GPU");
+        if(iGPUFreq!=0){
+            if(iGPUFreq>=100){
+                _screen_ssd1306->setCursor(13,30);
+            }
+            else{
+                _screen_ssd1306->setCursor(15,30);
+            }
+            _screen_ssd1306->print(sGpuFreq+" Mhz");
         }
-        else{
-            _screen->setCursor(15,30);
+        if(iCPUTemp!=0){
+            _screen_ssd1306->setCursor(18,40);
+            _screen_ssd1306->print(String(iCPUTemp)+" C");
         }
-        _screen->print(sGpuFreq+" Mhz");
-    }
-    if(iCPUTemp!=0){
-        _screen->setCursor(18,40);
-        _screen->print(String(iCPUTemp)+" C");
-    }
 
-    drawArc(96, 32, 0, iCPUDegree, 32, 32, 4, WHITE);
-    drawArc(96, 32, iCPUDegree, 360, 28, 28, 1, WHITE);
-    _screen->setCursor(88,10);
-    _screen->print("CPU");
-    if(iClockSpeed!=0){
-        if(iClockSpeed>=1000){
-            _screen->setCursor(72,30);
+        drawArc(96, 32, 0, iCPUDegree, 32, 32, 4, WHITE);
+        drawArc(96, 32, iCPUDegree, 360, 28, 28, 1, WHITE);
+        _screen_ssd1306->setCursor(88,10);
+        _screen_ssd1306->print("CPU");
+        if(iClockSpeed!=0){
+            if(iClockSpeed>=1000){
+                _screen_ssd1306->setCursor(72,30);
+            }
+            else{
+                _screen_ssd1306->setCursor(75,30);
+            }
+            _screen_ssd1306->print(sClockSpeed+" Mhz");
         }
-        else{
-            _screen->setCursor(75,30);
+        if(iCpuLoad!=0){
+            if(iCpuLoad>=10){
+                _screen_ssd1306->setCursor(82,20);
+            }
+            else{
+                _screen_ssd1306->setCursor(85,20);
+            }
+            _screen_ssd1306->print(sCpuLoad+" %");
         }
-        _screen->print(sClockSpeed+" Mhz");
+        if(iCPUTemp!=0){
+            _screen_ssd1306->setCursor(85,40);
+            _screen_ssd1306->print(String(iCPUTemp)+" C");
+        }
+        
+        _screen_ssd1306->display();
     }
-    if(iCpuLoad!=0){
-        if(iCpuLoad>=10){
-            _screen->setCursor(82,20);
+    if(_bUseST7735){
+        _screen_st7735->fillScreen(ST77XX_MAGENTA);
+        drawArc(32, 32, 0, iGPUDegree, 32, 32, 4, ST77XX_RED);
+        drawArc(32, 32, iGPUDegree, 360, 28, 28, 1, ST77XX_RED);
+        _screen_st7735->setCursor(24,10);
+        _screen_st7735->print("GPU");
+        if(iGPUFreq!=0){
+            if(iGPUFreq>=100){
+                _screen_st7735->setCursor(13,30);
+            }
+            else{
+                _screen_st7735->setCursor(15,30);
+            }
+            _screen_st7735->print(sGpuFreq+" Mhz");
         }
-        else{
-            _screen->setCursor(85,20);
+        if(iCPUTemp!=0){
+            _screen_st7735->setCursor(18,40);
+            _screen_st7735->print(String(iCPUTemp)+" C");
         }
-        _screen->print(sCpuLoad+" %");
+
+        drawArc(96, 32, 0, iCPUDegree, 32, 32, 4, ST77XX_RED);
+        drawArc(96, 32, iCPUDegree, 360, 28, 28, 1, ST77XX_RED);
+        _screen_st7735->setCursor(88,10);
+        _screen_st7735->print("CPU");
+        if(iClockSpeed!=0){
+            if(iClockSpeed>=1000){
+                _screen_st7735->setCursor(72,30);
+            }
+            else{
+                _screen_st7735->setCursor(75,30);
+            }
+            _screen_st7735->print(sClockSpeed+" Mhz");
+        }
+        if(iCpuLoad!=0){
+            if(iCpuLoad>=10){
+                _screen_st7735->setCursor(82,20);
+            }
+            else{
+                _screen_st7735->setCursor(85,20);
+            }
+            _screen_st7735->print(sCpuLoad+" %");
+        }
+        if(iCPUTemp!=0){
+            _screen_st7735->setCursor(85,40);
+            _screen_st7735->print(String(iCPUTemp)+" C");
+        }
     }
-    if(iCPUTemp!=0){
-        _screen->setCursor(85,40);
-        _screen->print(String(iCPUTemp)+" C");
-    }
-    
-    _screen->display();
+   
 }
 void ESPJarvis::showGPUPage(){
     int iGPUFreq=sGpuFreq.toInt();
     int iCPUTemp=sCpuTemp.toInt();
     int iGPUDegree = (int)(iGPUFreq*360/_iMaxGPUFreq);
-    if(iGPUDegree>360) iGPUDegree=360;
-    _screen->clearDisplay();
-    _screen->drawBitmap(64, 0, bitmapGPU64, 64, 64, WHITE);
-    drawArc(32, 32, 0, iGPUDegree, 32, 32, 4, WHITE);
-    drawArc(32, 32, iGPUDegree, 360, 28, 28, 1, WHITE);
-    _screen->setCursor(24,10);
-    _screen->print("GPU");
-    if(iGPUFreq!=0){
-        if(iGPUFreq>=100){
-            _screen->setCursor(13,30);
+    if(_bUseSSD1306){
+        if(iGPUDegree>360) iGPUDegree=360;
+        _screen_ssd1306->clearDisplay();
+        _screen_ssd1306->drawBitmap(64, 0, bitmapGPU64, 64, 64, WHITE);
+        drawArc(32, 32, 0, iGPUDegree, 32, 32, 4, WHITE);
+        drawArc(32, 32, iGPUDegree, 360, 28, 28, 1, WHITE);
+        _screen_ssd1306->setCursor(24,10);
+        _screen_ssd1306->print("GPU");
+        if(iGPUFreq!=0){
+            if(iGPUFreq>=100){
+                _screen_ssd1306->setCursor(13,30);
+            }
+            else{
+                _screen_ssd1306->setCursor(15,30);
+            }
+            _screen_ssd1306->print(sGpuFreq+" Mhz");
         }
-        else{
-            _screen->setCursor(15,30);
+        if(iCPUTemp!=0){
+            _screen_ssd1306->setCursor(18,40);
+            _screen_ssd1306->print(String(iCPUTemp)+" C");
         }
-        _screen->print(sGpuFreq+" Mhz");
+        _screen_ssd1306->display();
     }
-    if(iCPUTemp!=0){
-        _screen->setCursor(18,40);
-        _screen->print(String(iCPUTemp)+" C");
+    if(_bUseST7735){
+        if(iGPUDegree>360) iGPUDegree=360;
+        _screen_st7735->fillScreen(ST77XX_MAGENTA);
+        _screen_st7735->drawBitmap(64, 0, bitmapGPU64, 64, 64, ST77XX_RED);
+        drawArc(32, 32, 0, iGPUDegree, 32, 32, 4, ST77XX_RED);
+        drawArc(32, 32, iGPUDegree, 360, 28, 28, 1, ST77XX_RED);
+        _screen_st7735->setCursor(24,10);
+        _screen_st7735->print("GPU");
+        if(iGPUFreq!=0){
+            if(iGPUFreq>=100){
+                _screen_st7735->setCursor(13,30);
+            }
+            else{
+                _screen_st7735->setCursor(15,30);
+            }
+            _screen_st7735->print(sGpuFreq+" Mhz");
+        }
+        if(iCPUTemp!=0){
+            _screen_st7735->setCursor(18,40);
+            _screen_st7735->print(String(iCPUTemp)+" C");
+        }
     }
-    _screen->display();
 }
 void ESPJarvis::showCPUPage(){
     int iClockSpeed=sClockSpeed.toInt();
     float iCpuLoad=sCpuLoad.toFloat();
     int iCPUTemp=sCpuTemp.toInt();
     int iCPUDegree = (int)(iClockSpeed*360/_iMaxClockSpeed);
-    if(iCPUDegree>360) iCPUDegree=360;
-    _screen->clearDisplay();
-    _screen->drawBitmap(0, 0, bitmapChip64, 64, 64, WHITE);
-    drawArc(96, 32, 0, iCPUDegree, 32, 32, 4, WHITE);
-    drawArc(96, 32, iCPUDegree, 360, 28, 28, 1, WHITE);
-    _screen->setCursor(88,10);
-    _screen->print("CPU");
-    if(iClockSpeed!=0){
-        if(iClockSpeed>=1000){
-            _screen->setCursor(72,30);
+    if(_bUseSSD1306){
+        if(iCPUDegree>360) iCPUDegree=360;
+        _screen_ssd1306->clearDisplay();
+        _screen_ssd1306->drawBitmap(0, 0, bitmapChip64, 64, 64, WHITE);
+        drawArc(96, 32, 0, iCPUDegree, 32, 32, 4, WHITE);
+        drawArc(96, 32, iCPUDegree, 360, 28, 28, 1, WHITE);
+        _screen_ssd1306->setCursor(88,10);
+        _screen_ssd1306->print("CPU");
+        if(iClockSpeed!=0){
+            if(iClockSpeed>=1000){
+                _screen_ssd1306->setCursor(72,30);
+            }
+            else{
+                _screen_ssd1306->setCursor(75,30);
+            }
+            _screen_ssd1306->print(sClockSpeed+" Mhz");
         }
-        else{
-            _screen->setCursor(75,30);
+        if(iCpuLoad!=0){
+            if(iCpuLoad>=10){
+                _screen_ssd1306->setCursor(82,20);
+            }
+            else{
+                _screen_ssd1306->setCursor(85,20);
+            }
+            _screen_ssd1306->print(sCpuLoad+" %");
         }
-        _screen->print(sClockSpeed+" Mhz");
+        if(iCPUTemp!=0){
+            _screen_ssd1306->setCursor(85,40);
+            _screen_ssd1306->print(String(iCPUTemp)+" C");
+        }
+        _screen_ssd1306->display();
     }
-    if(iCpuLoad!=0){
-        if(iCpuLoad>=10){
-            _screen->setCursor(82,20);
+    if(_bUseST7735){
+        if(iCPUDegree>360) iCPUDegree=360;
+        _screen_st7735->fillScreen(ST77XX_MAGENTA);
+        _screen_st7735->drawBitmap(0, 0, bitmapChip64, 64, 64, ST77XX_RED);
+        drawArc(96, 32, 0, iCPUDegree, 32, 32, 4, ST77XX_RED);
+        drawArc(96, 32, iCPUDegree, 360, 28, 28, 1, ST77XX_RED);
+        _screen_st7735->setCursor(88,10);
+        _screen_st7735->print("CPU");
+        if(iClockSpeed!=0){
+            if(iClockSpeed>=1000){
+                _screen_st7735->setCursor(72,30);
+            }
+            else{
+                _screen_st7735->setCursor(75,30);
+            }
+            _screen_st7735->print(sClockSpeed+" Mhz");
         }
-        else{
-            _screen->setCursor(85,20);
+        if(iCpuLoad!=0){
+            if(iCpuLoad>=10){
+                _screen_st7735->setCursor(82,20);
+            }
+            else{
+                _screen_st7735->setCursor(85,20);
+            }
+            _screen_st7735->print(sCpuLoad+" %");
         }
-        _screen->print(sCpuLoad+" %");
+        if(iCPUTemp!=0){
+            _screen_st7735->setCursor(85,40);
+            _screen_st7735->print(String(iCPUTemp)+" C");
+        }
     }
-    if(iCPUTemp!=0){
-        _screen->setCursor(85,40);
-        _screen->print(String(iCPUTemp)+" C");
-    }
-    _screen->display();
 }
 void ESPJarvis::showMemoryPage(){
     int iMemory=sMemory.toInt();
     int iDiskUsage=sDiskUsage.toInt();
     int iSwap=sSwap.toInt();
     int iHours=sUptimeHours.toInt(); 
-    _screen->clearDisplay();
-    if(iSwap!=0){
-        _screen->drawBitmap(0, 0, bitmapSwap32, 32, 32, WHITE);
-        _screen->drawRect(35,3,45,10, WHITE);
-        _screen->fillRect(35,3,iSwap*45/100,10, WHITE);
-        _screen->setCursor(81,3);
-        _screen->print(String(iSwap)+"%");
-    }
-    if(iMemory!=0){
-        _screen->drawBitmap(96, 0, bitmapRAM32, 32, 32, WHITE);
-        _screen->drawRect(50,18,50,10, WHITE);
-        _screen->fillRect(100-50*iMemory/100,18,50*iMemory/100,10, WHITE);
-        _screen->setCursor(32,18);
-        _screen->print(String(iMemory)+"%");
-    }
-    if(iDiskUsage!=0){
-        _screen->drawRect(35,33,45,10, WHITE);
-        _screen->fillRect(35,33,iDiskUsage*45/100,10, WHITE);
-        _screen->setCursor(82,37);
-        _screen->print(String(iDiskUsage)+"%");
-    }
-    if(iHours!=0){
-        _screen->drawBitmap(0, 32, bitmapHDD32, 32, 32, WHITE);
-        _screen->setCursor(50,48);
-        _screen->print("Run Time:");   
-        if(iHours==(int)1){
-            _screen->setCursor(60,57);
-            _screen->print("1 Hours");        
-        }else{
-            _screen->setCursor(60,57);
-            _screen->print(String(iHours)+" Hours");
+    if(_bUseSSD1306){
+        _screen_ssd1306->clearDisplay();
+        if(iSwap!=0){
+            _screen_ssd1306->drawBitmap(0, 0, bitmapSwap32, 32, 32, WHITE);
+            _screen_ssd1306->drawRect(35,3,45,10, WHITE);
+            _screen_ssd1306->fillRect(35,3,iSwap*45/100,10, WHITE);
+            _screen_ssd1306->setCursor(81,3);
+            _screen_ssd1306->print(String(iSwap)+"%");
         }
-    }
-    _screen->display();
-    
+        if(iMemory!=0){
+            _screen_ssd1306->drawBitmap(96, 0, bitmapRAM32, 32, 32, WHITE);
+            _screen_ssd1306->drawRect(50,18,50,10, WHITE);
+            _screen_ssd1306->fillRect(100-50*iMemory/100,18,50*iMemory/100,10, WHITE);
+            _screen_ssd1306->setCursor(32,18);
+            _screen_ssd1306->print(String(iMemory)+"%");
+        }
+        if(iDiskUsage!=0){
+            _screen_ssd1306->drawRect(35,33,45,10, WHITE);
+            _screen_ssd1306->fillRect(35,33,iDiskUsage*45/100,10, WHITE);
+            _screen_ssd1306->setCursor(82,37);
+            _screen_ssd1306->print(String(iDiskUsage)+"%");
+        }
+        if(iHours!=0){
+            _screen_ssd1306->drawBitmap(0, 32, bitmapHDD32, 32, 32, WHITE);
+            _screen_ssd1306->setCursor(50,48);
+            _screen_ssd1306->print("Run Time:");   
+            if(iHours==(int)1){
+                _screen_ssd1306->setCursor(60,57);
+                _screen_ssd1306->print("1 Hours");        
+            }else{
+                _screen_ssd1306->setCursor(60,57);
+                _screen_ssd1306->print(String(iHours)+" Hours");
+            }
+        }
+        _screen_ssd1306->display();
+    }    
 }
 void ESPJarvis::showVersion(){
-    _screen->clearDisplay();
-    _screen->drawBitmap(47, 0, bitmapTiger64, 64, 64, WHITE);
-    _screen->setCursor(20,20);
-    _screen->print(SOFTWARE_VERSION);
-    _screen->setCursor(20,40);
-    _screen->print("2022");
-    _screen->display();
-    delay(3000);
-    _screen->clearDisplay();    
+    if(_bUseSSD1306){
+        _screen_ssd1306->clearDisplay();
+        _screen_ssd1306->drawBitmap(47, 0, bitmapTiger64, 64, 64, WHITE);
+        _screen_ssd1306->setCursor(20,20);
+        _screen_ssd1306->print(SOFTWARE_VERSION);
+        _screen_ssd1306->setCursor(20,40);
+        _screen_ssd1306->print("2022");
+        _screen_ssd1306->display();
+        delay(3000);
+        _screen_ssd1306->clearDisplay();    
+    }
+    if(_bUseST7735){
+        _screen_st7735->fillScreen(ST77XX_MAGENTA);
+        _screen_st7735->drawBitmap(47, 0, bitmapTiger64, 64, 64, ST77XX_RED);
+        _screen_st7735->setCursor(20,20);
+        _screen_st7735->print(SOFTWARE_VERSION);
+        _screen_st7735->setCursor(20,40);
+        _screen_st7735->print("2022");
+        delay(3000);
+        _screen_st7735->fillScreen(ST77XX_MAGENTA);   
+
+    }
 }
 
 void ESPJarvis::printMSG(int lineNumber, const char* text){
@@ -325,10 +466,17 @@ void ESPJarvis::printMSG(int lineNumber, const char* text){
     cScreenBuffer[base+i]=' ';    
   }
   cScreenBuffer[SCREEN_TEXT_PER_LINE*SCREEN_LINE_OF_TEXT]=0;
-  _screen->clearDisplay();
-  _screen->setCursor(0,0);
-  _screen->println(cScreenBuffer);
-  _screen->display();  
+  if(_bUseSSD1306){
+    _screen_ssd1306->clearDisplay();
+    _screen_ssd1306->setCursor(0,0);
+    _screen_ssd1306->println(cScreenBuffer);
+    _screen_ssd1306->display();  
+  }
+  if(_bUseST7735){
+    _screen_st7735->fillScreen(ST77XX_MAGENTA);
+    _screen_st7735->setCursor(0,0);
+    _screen_st7735->println(cScreenBuffer);
+  }
 }
 
 void ESPJarvis::initScreenBuffer(){

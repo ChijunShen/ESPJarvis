@@ -9,8 +9,9 @@
 #include <PubSubClient.h> 
 #include <Adafruit_GFX.h>   
 #include <Adafruit_SSD1306.h>
+#include <Adafruit_ST7735.h>
 
-#define SOFTWARE_VERSION "V0.2"
+#define SOFTWARE_VERSION "V0.5"
 #define SCREEN_TEXT_PER_LINE 21//每行显示多少字符
 #define SCREEN_LINE_OF_TEXT 8//显示多少行字符
 
@@ -18,7 +19,9 @@ class ESPJarvis {
     public:
         ESPJarvis(String sServer, int iPort = 1883);
         ESPJarvis(Adafruit_SSD1306 &screen, String sServer, int iPort = 1883);
+		ESPJarvis(Adafruit_ST7735 &screen, String sServer, int iPort = 1883);
         void attachScreen(Adafruit_SSD1306 &screen);
+		void attachScreen(Adafruit_ST7735 &screen);
         void setClientData(String sClientID, String sClientName, String sClientPassword);
         bool connect();
         int getServerState();
@@ -55,7 +58,10 @@ class ESPJarvis {
         String sSwap;
         String sClockSpeed;
         int _iMaxClockSpeed = 2000;
-        Adafruit_SSD1306 *_screen;
+        Adafruit_SSD1306 *_screen_ssd1306;
+		bool _bUseSSD1306 = false;
+		Adafruit_ST7735 *_screen_st7735;
+		bool _bUseST7735 = false;
 		bool connectMQTTBroker(String sClientName, String sClientPassword, String sClientID, String sServer, int iPort);
         void MQTTCallbackFunction(char *topic, byte *payload, unsigned int length); 
 		void drawArc(int x, int y, int start_angle, int seg_count, int rx, int ry, int w, unsigned int colour);
