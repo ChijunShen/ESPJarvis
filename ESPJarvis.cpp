@@ -266,16 +266,15 @@ void ESPJarvis::showMemoryPage(){
     int iSwap=sSwap.toInt();
     int iHours=sUptimeHours.toInt(); 
     _screen->clearDisplay();
-    _screen->drawBitmap(96, 0, bitmapRAM32, 32, 32, WHITE);
-    _screen->drawBitmap(0, 0, bitmapSwap32, 32, 32, WHITE);
-    _screen->drawBitmap(0, 32, bitmapHDD32, 32, 32, WHITE);
     if(iSwap!=0){
+        _screen->drawBitmap(0, 0, bitmapSwap32, 32, 32, WHITE);
         _screen->drawRect(35,3,45,10, WHITE);
         _screen->fillRect(35,3,iSwap*45/100,10, WHITE);
         _screen->setCursor(81,3);
         _screen->print(String(iSwap)+"%");
     }
     if(iMemory!=0){
+        _screen->drawBitmap(96, 0, bitmapRAM32, 32, 32, WHITE);
         _screen->drawRect(50,18,50,10, WHITE);
         _screen->fillRect(100-50*iMemory/100,18,50*iMemory/100,10, WHITE);
         _screen->setCursor(32,18);
@@ -288,13 +287,14 @@ void ESPJarvis::showMemoryPage(){
         _screen->print(String(iDiskUsage)+"%");
     }
     if(iHours!=0){
+        _screen->drawBitmap(0, 32, bitmapHDD32, 32, 32, WHITE);
         _screen->setCursor(50,48);
         _screen->print("Run Time:");   
         if(iHours==(int)1){
-            _screen->setCursor(75,57);
+            _screen->setCursor(60,57);
             _screen->print("1 Hours");        
         }else{
-            _screen->setCursor(75,57);
+            _screen->setCursor(60,57);
             _screen->print(String(iHours)+" Hours");
         }
     }
