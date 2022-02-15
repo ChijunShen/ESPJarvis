@@ -36,6 +36,7 @@ void ESPJarvis::attachScreen(Adafruit_SSD1306 &screen){
 void ESPJarvis::attachScreen(Adafruit_ST7735 &screen){
     _screen_st7735 = &screen;
     _bUseST7735 = true;
+    _screen_st7735->fillScreen(ST77XX_MAGENTA);
 }
 
 void ESPJarvis::setClientData(String sClientID, String sClientName, String sClientPassword){
@@ -102,18 +103,16 @@ int ESPJarvis::getServerState(){
 
 // x,y == coords of centre of arc
 // start_angle = 0 - 359
-// seg_count = number of 3 degree segments to draw (120 => 360 degree arc)
+// seg_count = number of inc * degree segments to draw
 // rx = x axis radius
 // yx = y axis radius
 // w  = width (thickness) of arc in pixels
 // colour = 16 bit colour value
 // Note if rx and ry are the same then an arc of a circle is drawn
-void ESPJarvis::drawArc(int x, int y, int start_angle, int seg_count, int rx, int ry, int w, unsigned int colour)
+void ESPJarvis::drawArc(int x, int y, int start_angle, int seg_count, int rx, int ry, int w, int colour, ScreenType type)
 {
-
-  byte seg = 1; // Segments are 3 degrees wide = 120 segments for 360 degrees
-  byte inc = 1; // Draw segments every 3 degrees, increase to 6 for segmented ring
-
+    byte seg = 1;
+    byte inc = 1;
     // Calculate first pair of coordinates for segment start
     float sx = cos((start_angle - 90) * DEG_TO_RAD);
     float sy = sin((start_angle - 90) * DEG_TO_RAD);
@@ -121,27 +120,23 @@ void ESPJarvis::drawArc(int x, int y, int start_angle, int seg_count, int rx, in
     uint16_t y0 = sy * (ry - w) + y;
     uint16_t x1 = sx * rx + x;
     uint16_t y1 = sy * ry + y;
-
-  // Draw colour blocks every inc degrees
-  for (int i = start_angle; i < start_angle + seg * seg_count; i += inc) {
-
-    // Calculate pair of coordinates for segment end
-    float sx2 = cos((i + seg - 90) * DEG_TO_RAD);
-    float sy2 = sin((i + seg - 90) * DEG_TO_RAD);
-    int x2 = sx2 * (rx - w) + x;
-    int y2 = sy2 * (ry - w) + y;
-    int x3 = sx2 * rx + x;
-    int y3 = sy2 * ry + y;
-
-    if(_bUseSSD1306){
-        _screen_ssd1306->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
-        _screen_ssd1306->fillTriangle(x1, y1, x2, y2, x3, y3, WHITE);
+    // Draw colour blocks every inc degrees
+    for (int i = start_angle; i < start_angle + seg * seg_count; i += inc) {
+        // Calculate pair of coordinates for segment end
+        float sx2 = cos((i + seg - 90) * DEG_TO_RAD);
+        float sy2 = sin((i + seg - 90) * DEG_TO_RAD);
+        int x2 = sx2 * (rx - w) + x;
+        int y2 = sy2 * (ry - w) + y;
+        int x3 = sx2 * rx + x;
+        int y3 = sy2 * ry + y;
+    if(_bUseSSD1306&&type==SSD1306){
+        _screen_ssd1306->fillTriangle(x0, y0, x1, y1, x2, y2, colour);
+        _screen_ssd1306->fillTriangle(x1, y1, x2, y2, x3, y3, colour);
     }
-    if(_bUseST7735){
-        _screen_st7735->fillTriangle(x0, y0, x1, y1, x2, y2, ST77XX_BLUE);
-        _screen_st7735->fillTriangle(x1, y1, x2, y2, x3, y3, ST77XX_BLUE);
+    if(_bUseST7735&&type==ST7735){
+        _screen_st7735->fillTriangle(x0, y0, x1, y1, x2, y2, colour);
+        _screen_st7735->fillTriangle(x1, y1, x2, y2, x3, y3, colour);
     }
-
     // Copy segment end to sgement start for next segment
     x0 = x2;
     y0 = y2;
@@ -161,7 +156,7 @@ void ESPJarvis::setMaxGPUFreq(int MaxGPUFreq)
         _iMaxGPUFreq = MaxGPUFreq;
     }
 }
-void ESPJarvis::showCPUGPUPage(){
+void ESPJarvis::showCPUGPUPage(ScreenType type){
     int iGPUFreq=sGpuFreq.toInt();
     int iCPUTemp=sCpuTemp.toInt();
     int iClockSpeed=sClockSpeed.toInt();
@@ -170,7 +165,7 @@ void ESPJarvis::showCPUGPUPage(){
     if(iGPUDegree>360) iGPUDegree=360;
     int iCPUDegree = (int)(iClockSpeed*360/_iMaxClockSpeed);
     if(iCPUDegree>360) iCPUDegree=360;
-    if(_bUseSSD1306){
+    if(_bUseSSD1306&&type==SSD1306){
          _screen_ssd1306->clearDisplay();
         drawArc(32, 32, 0, iGPUDegree, 32, 32, 4, WHITE);
         drawArc(32, 32, iGPUDegree, 360, 28, 28, 1, WHITE);
@@ -219,60 +214,16 @@ void ESPJarvis::showCPUGPUPage(){
         
         _screen_ssd1306->display();
     }
-    if(_bUseST7735){
-        _screen_st7735->fillScreen(ST77XX_MAGENTA);
-        drawArc(32, 32, 0, iGPUDegree, 32, 32, 4, ST77XX_RED);
-        drawArc(32, 32, iGPUDegree, 360, 28, 28, 1, ST77XX_RED);
-        _screen_st7735->setCursor(24,10);
-        _screen_st7735->print("GPU");
-        if(iGPUFreq!=0){
-            if(iGPUFreq>=100){
-                _screen_st7735->setCursor(13,30);
-            }
-            else{
-                _screen_st7735->setCursor(15,30);
-            }
-            _screen_st7735->print(sGpuFreq+" Mhz");
-        }
-        if(iCPUTemp!=0){
-            _screen_st7735->setCursor(18,40);
-            _screen_st7735->print(String(iCPUTemp)+" C");
-        }
+    if(_bUseST7735&&type==ST7735){
 
-        drawArc(96, 32, 0, iCPUDegree, 32, 32, 4, ST77XX_RED);
-        drawArc(96, 32, iCPUDegree, 360, 28, 28, 1, ST77XX_RED);
-        _screen_st7735->setCursor(88,10);
-        _screen_st7735->print("CPU");
-        if(iClockSpeed!=0){
-            if(iClockSpeed>=1000){
-                _screen_st7735->setCursor(72,30);
-            }
-            else{
-                _screen_st7735->setCursor(75,30);
-            }
-            _screen_st7735->print(sClockSpeed+" Mhz");
-        }
-        if(iCpuLoad!=0){
-            if(iCpuLoad>=10){
-                _screen_st7735->setCursor(82,20);
-            }
-            else{
-                _screen_st7735->setCursor(85,20);
-            }
-            _screen_st7735->print(sCpuLoad+" %");
-        }
-        if(iCPUTemp!=0){
-            _screen_st7735->setCursor(85,40);
-            _screen_st7735->print(String(iCPUTemp)+" C");
-        }
     }
    
 }
-void ESPJarvis::showGPUPage(){
+void ESPJarvis::showGPUPage(ScreenType type){
     int iGPUFreq=sGpuFreq.toInt();
     int iCPUTemp=sCpuTemp.toInt();
     int iGPUDegree = (int)(iGPUFreq*360/_iMaxGPUFreq);
-    if(_bUseSSD1306){
+    if(_bUseSSD1306&&type==SSD1306){
         if(iGPUDegree>360) iGPUDegree=360;
         _screen_ssd1306->clearDisplay();
         _screen_ssd1306->drawBitmap(64, 0, bitmapGPU64, 64, 64, WHITE);
@@ -295,40 +246,29 @@ void ESPJarvis::showGPUPage(){
         }
         _screen_ssd1306->display();
     }
-    if(_bUseST7735){
-        if(iGPUDegree>360) iGPUDegree=360;
-        _screen_st7735->fillScreen(ST77XX_MAGENTA);
-        _screen_st7735->drawBitmap(64, 0, bitmapGPU64, 64, 64, ST77XX_RED);
-        drawArc(32, 32, 0, iGPUDegree, 32, 32, 4, ST77XX_RED);
-        drawArc(32, 32, iGPUDegree, 360, 28, 28, 1, ST77XX_RED);
-        _screen_st7735->setCursor(24,10);
-        _screen_st7735->print("GPU");
-        if(iGPUFreq!=0){
-            if(iGPUFreq>=100){
-                _screen_st7735->setCursor(13,30);
-            }
-            else{
-                _screen_st7735->setCursor(15,30);
-            }
-            _screen_st7735->print(sGpuFreq+" Mhz");
-        }
-        if(iCPUTemp!=0){
-            _screen_st7735->setCursor(18,40);
-            _screen_st7735->print(String(iCPUTemp)+" C");
-        }
+    if(_bUseST7735&&type==ST7735){
+
     }
 }
-void ESPJarvis::showCPUPage(){
+void ESPJarvis::ssd1306_drawCirclewithIcon(const uint8_t bitmap[],int degree, bool icon_left){
+    if(_bUseSSD1306){
+        if(icon_left){
+            _screen_ssd1306->drawBitmap(0, 0, bitmap, 64, 64, SSD1306_WHITE);
+            drawCircleDegree(96,32,degree,0,SSD1306_WHITE,SSD1306_BLACK,4,32,SSD1306);
+            drawCircleDegree(96,32,360,0,SSD1306_WHITE,SSD1306_BLACK,1,28,SSD1306);
+        }        
+    }
+
+}
+void ESPJarvis::showCPUPage(ScreenType type){
     int iClockSpeed=sClockSpeed.toInt();
-    float iCpuLoad=sCpuLoad.toFloat();
+    float fCpuLoad=sCpuLoad.toFloat();
     int iCPUTemp=sCpuTemp.toInt();
     int iCPUDegree = (int)(iClockSpeed*360/_iMaxClockSpeed);
-    if(_bUseSSD1306){
+    if(_bUseSSD1306&&type==SSD1306){
         if(iCPUDegree>360) iCPUDegree=360;
         _screen_ssd1306->clearDisplay();
-        _screen_ssd1306->drawBitmap(0, 0, bitmapChip64, 64, 64, WHITE);
-        drawArc(96, 32, 0, iCPUDegree, 32, 32, 4, WHITE);
-        drawArc(96, 32, iCPUDegree, 360, 28, 28, 1, WHITE);
+        ssd1306_drawCirclewithIcon(bitmapChip64,iCPUDegree,true);
         _screen_ssd1306->setCursor(88,10);
         _screen_ssd1306->print("CPU");
         if(iClockSpeed!=0){
@@ -340,8 +280,8 @@ void ESPJarvis::showCPUPage(){
             }
             _screen_ssd1306->print(sClockSpeed+" Mhz");
         }
-        if(iCpuLoad!=0){
-            if(iCpuLoad>=10){
+        if(fCpuLoad!=0){
+            if(fCpuLoad>=10){
                 _screen_ssd1306->setCursor(82,20);
             }
             else{
@@ -355,44 +295,29 @@ void ESPJarvis::showCPUPage(){
         }
         _screen_ssd1306->display();
     }
-    if(_bUseST7735){
-        if(iCPUDegree>360) iCPUDegree=360;
-        _screen_st7735->fillScreen(ST77XX_MAGENTA);
-        _screen_st7735->drawBitmap(0, 0, bitmapChip64, 64, 64, ST77XX_RED);
-        drawArc(96, 32, 0, iCPUDegree, 32, 32, 4, ST77XX_RED);
-        drawArc(96, 32, iCPUDegree, 360, 28, 28, 1, ST77XX_RED);
-        _screen_st7735->setCursor(88,10);
-        _screen_st7735->print("CPU");
-        if(iClockSpeed!=0){
-            if(iClockSpeed>=1000){
-                _screen_st7735->setCursor(72,30);
-            }
-            else{
-                _screen_st7735->setCursor(75,30);
-            }
-            _screen_st7735->print(sClockSpeed+" Mhz");
-        }
-        if(iCpuLoad!=0){
-            if(iCpuLoad>=10){
-                _screen_st7735->setCursor(82,20);
-            }
-            else{
-                _screen_st7735->setCursor(85,20);
-            }
-            _screen_st7735->print(sCpuLoad+" %");
-        }
-        if(iCPUTemp!=0){
-            _screen_st7735->setCursor(85,40);
-            _screen_st7735->print(String(iCPUTemp)+" C");
-        }
+    if(_bUseST7735&&type==ST7735){
+        //drawArc(96, 32, 0, 360, 16, 16, 4, ST77XX_MAGENTA, ST7735);
+        //drawArc(96, 32, 0, iCPUDegree, 16, 16, 4, ST77XX_BLUE, ST7735);
+        //drawArc(96, 32, iCPUDegree, 360, 10, 10, 3, ST77XX_RED, ST7735);
+        //delay(1000);
+        drawCircleDegree(20, 20, iCPUDegree);
+        drawCircleDegree(60, 20, iCPUDegree);
+        drawCircleDegree(100, 20, iCPUDegree);
+        drawCircleDegree(20, 60, iCPUDegree-10);
+        drawCircleDegree(60, 60, iCPUDegree-10);
+        drawCircleDegree(100, 60, iCPUDegree-10);
+        drawCircleDegree(20, 100, iCPUDegree-20);
+        drawCircleDegree(60, 100, iCPUDegree-20);
+        drawCircleDegree(100, 100, iCPUDegree-20);
+
     }
 }
-void ESPJarvis::showMemoryPage(){
+void ESPJarvis::showMemoryPage(ScreenType type){
     int iMemory=sMemory.toInt();
     int iDiskUsage=sDiskUsage.toInt();
     int iSwap=sSwap.toInt();
     int iHours=sUptimeHours.toInt(); 
-    if(_bUseSSD1306){
+    if(_bUseSSD1306&&type==SSD1306){
         _screen_ssd1306->clearDisplay();
         if(iSwap!=0){
             _screen_ssd1306->drawBitmap(0, 0, bitmapSwap32, 32, 32, WHITE);
@@ -429,8 +354,8 @@ void ESPJarvis::showMemoryPage(){
         _screen_ssd1306->display();
     }    
 }
-void ESPJarvis::showVersion(){
-    if(_bUseSSD1306){
+void ESPJarvis::showVersion(ScreenType type){
+    if(_bUseSSD1306&&type==SSD1306){
         _screen_ssd1306->clearDisplay();
         _screen_ssd1306->drawBitmap(47, 0, bitmapTiger64, 64, 64, WHITE);
         _screen_ssd1306->setCursor(20,20);
@@ -441,7 +366,7 @@ void ESPJarvis::showVersion(){
         delay(3000);
         _screen_ssd1306->clearDisplay();    
     }
-    if(_bUseST7735){
+    if(_bUseST7735&&type==ST7735){
         _screen_st7735->fillScreen(ST77XX_MAGENTA);
         _screen_st7735->drawBitmap(47, 0, bitmapTiger64, 64, 64, ST77XX_RED);
         _screen_st7735->setCursor(20,20);
@@ -454,7 +379,7 @@ void ESPJarvis::showVersion(){
     }
 }
 
-void ESPJarvis::printMSG(int lineNumber, const char* text){
+void ESPJarvis::printMSG(int lineNumber, const char* text, ScreenType type){
   int i=0;
   int textLength=((String)text).length();
   int base=SCREEN_TEXT_PER_LINE*(lineNumber-1);
@@ -466,17 +391,49 @@ void ESPJarvis::printMSG(int lineNumber, const char* text){
     cScreenBuffer[base+i]=' ';    
   }
   cScreenBuffer[SCREEN_TEXT_PER_LINE*SCREEN_LINE_OF_TEXT]=0;
-  if(_bUseSSD1306){
+  if(_bUseSSD1306&&type==SSD1306){
     _screen_ssd1306->clearDisplay();
     _screen_ssd1306->setCursor(0,0);
     _screen_ssd1306->println(cScreenBuffer);
     _screen_ssd1306->display();  
   }
-  if(_bUseST7735){
+  if(_bUseST7735&&type==ST7735){
     _screen_st7735->fillScreen(ST77XX_MAGENTA);
     _screen_st7735->setCursor(0,0);
     _screen_st7735->println(cScreenBuffer);
   }
+}
+
+void ESPJarvis::drawCircleDegree(int x, int y, int degree , int degreeOld, int color , int colorBackground, int width , int radius , ScreenType type){
+    if(degreeOld == 0){//draw complete Circle
+        if(_bUseSSD1306&&type==SSD1306){
+            drawArc(x, y, 0, degree, radius, radius, width, color, SSD1306);
+            drawArc(x, y, degree, 359 - degree , radius, radius, width, colorBackground, SSD1306);  
+        }
+        if(_bUseST7735&&type==ST7735){
+            drawArc(x, y, 0, degree, radius, radius, width, color, ST7735);
+            drawArc(x, y, degree, 359 - degree , radius, radius, width, colorBackground, ST7735);  
+        }
+    }
+    else if (degree == degreeOld){
+        return;
+    }
+    else if(degree < degreeOld){
+        if(_bUseSSD1306&&type==SSD1306){
+            drawArc(x, y, degree, degreeOld - degree , radius, radius, width, colorBackground, SSD1306); 
+        }
+        if(_bUseST7735&&type==ST7735){
+            drawArc(x, y, degree, degreeOld - degree , radius, radius, width, colorBackground, ST7735);   
+        }     
+    }
+    else{
+        if(_bUseSSD1306&&type==SSD1306){
+            drawArc(x, y, degreeOld, degree - degreeOld , radius, radius, width, color, SSD1306); 
+        }
+        if(_bUseST7735&&type==ST7735){
+            drawArc(x, y, degreeOld, degree - degreeOld , radius, radius, width, color, ST7735); 
+        }   
+    }        
 }
 
 void ESPJarvis::initScreenBuffer(){

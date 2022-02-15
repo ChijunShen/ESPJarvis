@@ -15,6 +15,11 @@
 #define SCREEN_TEXT_PER_LINE 21//每行显示多少字符
 #define SCREEN_LINE_OF_TEXT 8//显示多少行字符
 
+enum ScreenType {
+	SSD1306,
+	ST7735
+};
+
 class ESPJarvis {
     public:
         ESPJarvis(String sServer, int iPort = 1883);
@@ -26,16 +31,17 @@ class ESPJarvis {
         bool connect();
         int getServerState();
         void run();
-        void showCPUPage();
-        void showGPUPage();
-        void showCPUGPUPage();
-		void showMemoryPage();
-        void setMaxClockSpeed(int MaxClockSpeed);
+		void setMaxClockSpeed(int MaxClockSpeed);
         void setMaxGPUFreq(int MaxGPUFreq);
-		void showVersion();
-		void printMSG(int lineNumber, const char* text);
 		void setMqttTopicPrefix(String Prefix);
 		String getMqttTopicPrefix();
+        void showCPUPage(ScreenType type=SSD1306);
+        void showGPUPage(ScreenType type=SSD1306);
+        void showCPUGPUPage(ScreenType type=SSD1306);
+		void showMemoryPage(ScreenType type=SSD1306);
+		void showVersion(ScreenType type=SSD1306);
+		void drawCircleDegree(int x,  int y, int degree = 360, int degreeOld = 0, int color = ST77XX_GREEN, int colorBackground = ST77XX_WHITE, int width = 4, int radius = 16, ScreenType type = ST7735);
+		void printMSG(int lineNumber, const char* text, ScreenType type=SSD1306);
     private:
         WiFiClient esp32;         
         PubSubClient client;     
@@ -64,7 +70,8 @@ class ESPJarvis {
 		bool _bUseST7735 = false;
 		bool connectMQTTBroker(String sClientName, String sClientPassword, String sClientID, String sServer, int iPort);
         void MQTTCallbackFunction(char *topic, byte *payload, unsigned int length); 
-		void drawArc(int x, int y, int start_angle, int seg_count, int rx, int ry, int w, unsigned int colour);
+		void drawArc(int x, int y, int start_angle, int seg_count, int rx, int ry, int w, int colour, ScreenType type=SSD1306);
+		void ssd1306_drawCirclewithIcon(const uint8_t bitmap[],int degree, bool icon_left=true);
 		void initScreenBuffer();
 
 };
