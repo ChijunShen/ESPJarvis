@@ -376,7 +376,7 @@ void ESPJarvis::drawCpuCircle(int x,  int y, int coreIndex, int color, ScreenTyp
                 _screen_st7735->print(_iCpuTemp[coreIndex]);
             }
             _iCpuClockOld[coreIndex] = _iCpuClock[coreIndex];
-            _iCpuTempOld[coreIndex] = _iCpuTempOld[coreIndex];
+            _iCpuTempOld[coreIndex] = _iCpuTemp[coreIndex];
 
         }
     }
