@@ -52,6 +52,7 @@ void ESPJarvis::MQTTCallbackFunction(char *topic, byte *payload, unsigned int le
         cMQTTPayload[i]= (char) payload[i];
     }
     cMQTTPayload[length] = 0;
+    // for rasberry pi
     // if(sTopic.indexOf("cpuload")>0){
     //     sCpuLoad = String(cMQTTPayload);        
     // }else if(sTopic.indexOf("temp")>0){
@@ -69,6 +70,8 @@ void ESPJarvis::MQTTCallbackFunction(char *topic, byte *payload, unsigned int le
     // }else if(sTopic.indexOf("sys")>0){
     //     sClockSpeed = String(cMQTTPayload);     
     // }
+
+    //for pc
     // if(sTopic.indexOf("d_1")>0){
     //     _iCpuLoad[1] = String(cMQTTPayload).toInt();   
     // }else if(sTopic.indexOf("d_2")>0){
@@ -107,16 +110,6 @@ void ESPJarvis::MQTTCallbackFunction(char *topic, byte *payload, unsigned int le
     }else if(sTopic.indexOf("p_6")>0){
         _iCpuTemp[6] = String(cMQTTPayload).toInt(); 
     }
-    // for(int i=1;i<7;i++){
-    //     tmp=String("k_")+String(i);
-    //     if(sTopic.indexOf(tmp)>0){
-    //         printMSG(1,topic);
-    //         printMSG(2,cMQTTPayload);
-    //         _iCpuClock[i] = int(cMQTTPayload); 
-    //         break;
-    //     }
-    // }
-
 }
 
 bool ESPJarvis::connectMQTTBroker(String sClientName, String sClientPassword, String sClientID, String sServer, int iPort){
