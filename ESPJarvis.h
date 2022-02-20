@@ -12,9 +12,19 @@
 #include <Adafruit_ST7735.h>
 
 #define SOFTWARE_VERSION "V1.0"
-#define SCREEN_TEXT_PER_LINE 21//每行显示多少字符
-#define SCREEN_LINE_OF_TEXT 8//显示多少行字符
+#define SCREEN_TEXT_PER_LINE 21
+#define SCREEN_LINE_OF_TEXT 8
+//Add defined RGB565 colour 
 #define ST77XX_GRAY 0x8410
+#define ST77XX_NAVY 0x000F
+#define ST77XX_DARKGREEN 0x03E0
+#define ST77XX_DARKCYAN 0x03EF
+#define ST77XX_MAROON 0x7800
+#define ST77XX_PURPLE 0x780F
+#define ST77XX_OLIVE 0x7BE0
+#define ST77XX_LIGHTGREY 0xC618
+#define ST77XX_DARKGREY 0x7BEF
+
 
 #define NUM_OF_CORES 20
 

@@ -355,7 +355,8 @@ void ESPJarvis::drawCpuCircle(int x,  int y, int coreIndex, int color, ScreenTyp
                     _screen_st7735->setCursor(x-12, y-4);
                 }
                 if(_iBackgroundColour == ST77XX_BLACK){
-                    _screen_st7735->setTextColor(ST77XX_GRAY);
+                    //_screen_st7735->setTextColor(ST77XX_GRAY);
+                    _screen_st7735->setTextColor(ST77XX_OLIVE);
                 }else{
                     _screen_st7735->setTextColor(ST77XX_RED);
                 }
@@ -366,9 +367,9 @@ void ESPJarvis::drawCpuCircle(int x,  int y, int coreIndex, int color, ScreenTyp
                 _screen_st7735->setCursor(x-6, y+5);
                 if(_iCpuTemp[coreIndex]<75){
                     if(_iBackgroundColour == ST77XX_BLACK){
-                        _screen_st7735->setTextColor(ST77XX_GREEN);
+                        _screen_st7735->setTextColor(ST77XX_DARKGREEN);
                     }else{
-                        _screen_st7735->setTextColor(ST77XX_YELLOW);
+                        _screen_st7735->setTextColor(ST77XX_DARKGREEN);
                     }
                 }else{
                     _screen_st7735->setTextColor(ST77XX_RED);
@@ -387,7 +388,8 @@ void ESPJarvis::setDisplayMode(DisplayMode Mode){
         switch (Mode)
         {
         case DayMode:
-            setBackgroundColour(ST77XX_MAGENTA);
+            setBackgroundColour(ST77XX_NAVY);
+            //setBackgroundColour(ST77XX_MAGENTA);
             _screen_st7735->fillScreen(_iBackgroundColour);
             for(int i=1; i<NUM_OF_CORES+1; i++){
                 _iCpuClockOld[i] = 0;
@@ -427,7 +429,11 @@ void ESPJarvis::showSixCoreCpu(String cpuName, ScreenType type, HardwareType har
             switch (hardware)
             {
             case Intel:
-                 _screen_st7735->drawBitmap(9, 93, bitmapIntel48, 48, 48, ST77XX_BLUE);
+                if(_displayMode==DayMode){
+                    _screen_st7735->drawBitmap(9, 93, bitmapIntel48, 48, 48, ST77XX_DARKCYAN);
+                }else{
+                    _screen_st7735->drawBitmap(9, 93, bitmapIntel48, 48, 48, ST77XX_BLUE);
+                }
                 break;
             case AMD:
                 _screen_st7735->drawBitmap(9, 88, bitmapAMD50, 50, 50, ST77XX_RED);
