@@ -72,43 +72,17 @@ void ESPJarvis::MQTTCallbackFunction(char *topic, byte *payload, unsigned int le
     // }
 
     //for pc
-    // if(sTopic.indexOf("d_1")>0){
-    //     _iCpuLoad[1] = String(cMQTTPayload).toInt();   
-    // }else if(sTopic.indexOf("d_2")>0){
-    //     _iCpuLoad[2] = String(cMQTTPayload).toInt();  
-    // }else if(sTopic.indexOf("d_3")>0){
-    //     _iCpuLoad[3] = String(cMQTTPayload).toInt();  
-    // }else if(sTopic.indexOf("d_4")>0){
-    //     _iCpuLoad[4] = String(cMQTTPayload).toInt();  
-    // }else if(sTopic.indexOf("d_5")>0){
-    //     _iCpuLoad[5] = String(cMQTTPayload).toInt();  
-    // }else if(sTopic.indexOf("d_6")>0){
-    //     _iCpuLoad[6] = String(cMQTTPayload).toInt();  
-    // } 
-    if(sTopic.indexOf("k_1")>0){
-        _iCpuClock[1] = String(cMQTTPayload).toInt();   
-    }else if(sTopic.indexOf("k_2")>0){
-        _iCpuClock[2] = String(cMQTTPayload).toInt();  
-    }else if(sTopic.indexOf("k_3")>0){
-        _iCpuClock[3] = String(cMQTTPayload).toInt();  
-    }else if(sTopic.indexOf("k_4")>0){
-        _iCpuClock[4] = String(cMQTTPayload).toInt();  
-    }else if(sTopic.indexOf("k_5")>0){
-        _iCpuClock[5] = String(cMQTTPayload).toInt();  
-    }else if(sTopic.indexOf("k_6")>0){
-        _iCpuClock[6] = String(cMQTTPayload).toInt(); 
-    }else if(sTopic.indexOf("p_1")>0){
-        _iCpuTemp[1] = String(cMQTTPayload).toInt();   
-    }else if(sTopic.indexOf("p_2")>0){
-        _iCpuTemp[2] = String(cMQTTPayload).toInt();  
-    }else if(sTopic.indexOf("p_3")>0){
-        _iCpuTemp[3] = String(cMQTTPayload).toInt();  
-    }else if(sTopic.indexOf("p_4")>0){
-        _iCpuTemp[4] = String(cMQTTPayload).toInt();  
-    }else if(sTopic.indexOf("p_5")>0){
-        _iCpuTemp[5] = String(cMQTTPayload).toInt();  
-    }else if(sTopic.indexOf("p_6")>0){
-        _iCpuTemp[6] = String(cMQTTPayload).toInt(); 
+    for(int i=1; i<(NUM_OF_CORES+1) ; i++){
+        if(sTopic.indexOf(("k_"+String(i)).c_str())>0){
+            _iCpuClock[i] = String(cMQTTPayload).toInt();  
+            return;
+        }
+    }
+    for(int i=1; i<(NUM_OF_CORES+1) ; i++){
+        if(sTopic.indexOf(("p_"+String(i)).c_str())>0){
+            _iCpuTemp[i] = String(cMQTTPayload).toInt();  
+            return;
+        }
     }
 }
 
@@ -117,32 +91,20 @@ bool ESPJarvis::connectMQTTBroker(String sClientName, String sClientPassword, St
     client.setServer(sServer.c_str(), iPort);
     client.setCallback(std::bind(&ESPJarvis::MQTTCallbackFunction, this,  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     if (client.connect(sClientID.c_str(), sClientName.c_str(), sClientPassword.c_str())) {
+
+        //rasberry pi
          client.subscribe((_sMqttTopicPrefix + "/cpuload").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuload_1").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuload_2").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuload_3").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuload_4").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuload_5").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuload_6").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cputemp").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cputemp_1").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cputemp_2").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cputemp_3").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cputemp_4").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cputemp_5").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cputemp_6").c_str(),iBrokerQoS);
          client.subscribe((_sMqttTopicPrefix + "/diskusage").c_str(),iBrokerQoS);
          client.subscribe((_sMqttTopicPrefix + "/gpu_freq").c_str(),iBrokerQoS);
          client.subscribe((_sMqttTopicPrefix + "/memory").c_str(),iBrokerQoS);
          client.subscribe((_sMqttTopicPrefix + "/swap").c_str(),iBrokerQoS);
          client.subscribe((_sMqttTopicPrefix + "/uptime_hours").c_str(),iBrokerQoS);
          client.subscribe((_sMqttTopicPrefix + "/sys_clock_speed").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuclock_1").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuclock_2").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuclock_3").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuclock_4").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuclock_5").c_str(),iBrokerQoS);
-         client.subscribe((_sMqttTopicPrefix + "/cpuclock_6").c_str(),iBrokerQoS);
+         for(int i=1; i<(NUM_OF_CORES+1) ; i++){
+             client.subscribe((_sMqttTopicPrefix + "/cpuload_"+String(i)).c_str(),iBrokerQoS);
+             client.subscribe((_sMqttTopicPrefix + "/cputemp_"+String(i)).c_str(),iBrokerQoS);
+             client.subscribe((_sMqttTopicPrefix + "/cpuclock_"+String(i)).c_str(),iBrokerQoS);
+         }
          return true;
      } else {
          return false;
@@ -412,7 +374,141 @@ void ESPJarvis::setDisplayMode(DisplayMode Mode){
     }
 
 }
-void ESPJarvis::showSixCoreCpu(String cpuName, ScreenType type, HardwareType hardware){
+int ESPJarvis::getDisplayMode(){
+    return _displayMode;
+}
+
+void ESPJarvis::drawIcon(String cpuName, ScreenType type, HardwareType hardware){
+    if(_bUseST7735&&type==ST7735){
+        if(_iBackgroundColour == ST77XX_BLACK){
+                _screen_st7735->drawBitmap(1, 83, bitmapChip64, 64, 64, ST77XX_GRAY);
+                _screen_st7735->drawBitmap(65, 83, bitmapTiger64, 64, 64, ST77XX_RED);
+            } else{
+                _screen_st7735->drawBitmap(1, 83, bitmapChip64, 64, 64, ST77XX_YELLOW);
+                _screen_st7735->drawBitmap(65, 83, bitmapTiger64, 64, 64, ST77XX_BLUE);
+            }
+            // if( hardware == Intel){
+            //     _screen_st7735->drawBitmap(9, 93, bitmapIntel48, 48, 48, ST77XX_BLUE);
+            // } 
+            switch (hardware)
+            {
+            case Intel:
+                if(_displayMode==DayMode){
+                    _screen_st7735->drawBitmap(9, 93, bitmapIntel48, 48, 48, ST77XX_DARKCYAN);
+                }else{
+                    _screen_st7735->drawBitmap(9, 93, bitmapIntel48, 48, 48, ST77XX_BLUE);
+                }
+                break;
+            case AMD:
+                _screen_st7735->drawBitmap(9, 88, bitmapAMD50, 50, 50, ST77XX_RED);
+                break;
+            case AMD_RYZEN:
+                _screen_st7735->drawBitmap(9, 88, bitmapAMD50, 50, 50, ST77XX_RED);
+                if(_iBackgroundColour == ST77XX_BLACK){
+                    _screen_st7735->drawBitmap(25, 85, bitmapRyzen24, 24, 24, ST77XX_GRAY);
+                }else{
+                    _screen_st7735->drawBitmap(25, 85, bitmapRyzen24, 24, 24, ST77XX_YELLOW);
+                }
+                break;            
+            default:
+                break;
+            }
+            _screen_st7735->setCursor(1, 150);
+            _screen_st7735->setTextColor(ST77XX_RED);
+            _screen_st7735->print(cpuName);
+    }
+
+}
+void ESPJarvis::show12CoreCpu(String cpuName, ScreenType type, HardwareType hardware){
+    if(_bUseST7735&&type==ST7735){
+        if(_iCpuClockOld[1] ==0 ){
+            _screen_st7735->fillScreen(_iBackgroundColour);
+            drawIcon(cpuName, type, hardware);
+            iTicks = 0;            
+            switch (_displayMode)
+            {
+            case DayMode:
+                drawCpuCircle(22, 20, 1, ST77XX_BLUE, ST7735);
+                drawCpuCircle(64, 20, 2, ST77XX_BLUE, ST7735);
+                drawCpuCircle(107, 20, 3, ST77XX_BLUE, ST7735);
+                drawCpuCircle(22, 62, 4, ST77XX_BLUE, ST7735);
+                drawCpuCircle(64, 62, 5, ST77XX_BLUE, ST7735);
+                drawCpuCircle(107, 62, 6, ST77XX_BLUE, ST7735);
+                break;
+            case DarkMode:
+                drawCpuCircle(22, 20, 1, ST77XX_RED, ST7735);
+                drawCpuCircle(64, 20, 2, ST77XX_RED, ST7735);
+                drawCpuCircle(107, 20, 3, ST77XX_RED, ST7735);
+                drawCpuCircle(22, 62, 4, ST77XX_RED, ST7735);
+                drawCpuCircle(64, 62, 5, ST77XX_RED, ST7735);
+                drawCpuCircle(107, 62, 6, ST77XX_RED, ST7735);
+                break;            
+            default:
+                break;
+            }
+        }else{
+            iTicks ++;
+            if(iTicks>200) iTicks=0;
+            switch (_displayMode)
+            {
+            case DayMode:
+                 if(iTicks==0){
+                    setDisplayMode(DayMode);
+                    drawIcon(cpuName, type, hardware);
+                }
+                if(iTicks==100){
+                    setDisplayMode(DayMode);
+                    drawIcon(cpuName, type, hardware);
+                }
+                if(iTicks<100){
+                    drawCpuCircle(22, 20, 1, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(64, 20, 2, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(107, 20, 3, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(22, 62, 4, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(64, 62, 5, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(107, 62, 6, ST77XX_BLUE, ST7735);
+                }else{
+                    drawCpuCircle(22, 20, 7, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(64, 20, 8, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(107, 20, 9, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(22, 62, 10, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(64, 62, 11, ST77XX_BLUE, ST7735);
+                    drawCpuCircle(107, 62, 12, ST77XX_BLUE, ST7735);
+                }
+                break;
+            case DarkMode:
+                if(iTicks==0){
+                    setDisplayMode(DarkMode);
+                    drawIcon(cpuName, type, hardware);
+                }
+                if(iTicks==100){
+                    setDisplayMode(DarkMode);
+                    drawIcon(cpuName, type, hardware);
+                }
+                if(iTicks<100){
+                    drawCpuCircle(22, 20, 1, ST77XX_RED, ST7735);
+                    drawCpuCircle(64, 20, 2, ST77XX_RED, ST7735);
+                    drawCpuCircle(107, 20, 3, ST77XX_RED, ST7735);
+                    drawCpuCircle(22, 62, 4, ST77XX_RED, ST7735);
+                    drawCpuCircle(64, 62, 5, ST77XX_RED, ST7735);
+                    drawCpuCircle(107, 62, 6, ST77XX_RED, ST7735);
+                }else{
+                    drawCpuCircle(22, 20, 7, ST77XX_RED, ST7735);
+                    drawCpuCircle(64, 20, 8, ST77XX_RED, ST7735);
+                    drawCpuCircle(107, 20, 9, ST77XX_RED, ST7735);
+                    drawCpuCircle(22, 62, 10, ST77XX_RED, ST7735);
+                    drawCpuCircle(64, 62, 11, ST77XX_RED, ST7735);
+                    drawCpuCircle(107, 62, 12, ST77XX_RED, ST7735);
+                }
+                break;            
+            default:
+                break;
+            }
+        }
+    }
+
+}
+void ESPJarvis::show6CoreCpu(String cpuName, ScreenType type, HardwareType hardware){
     if(_bUseST7735&&type==ST7735){
         if(_iCpuClockOld[1] ==0 ){
             _screen_st7735->fillScreen(_iBackgroundColour);

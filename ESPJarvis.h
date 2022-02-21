@@ -26,7 +26,7 @@
 #define ST77XX_DARKGREY 0x7BEF
 
 
-#define NUM_OF_CORES 20
+#define NUM_OF_CORES 10
 
 enum ScreenType {
 	SSD1306,
@@ -61,6 +61,7 @@ class ESPJarvis {
 		void setBackgroundColour(int colour);
 		void setDisplayMode(DisplayMode Mode=DarkMode);
 		String getMqttTopicPrefix();
+		int getDisplayMode();
         void showCPUPage(ScreenType type=SSD1306);
         void showGPUPage(ScreenType type=SSD1306);
         void showCPUGPUPage(ScreenType type=SSD1306);
@@ -68,13 +69,15 @@ class ESPJarvis {
 		void showVersion(ScreenType type=SSD1306);
 		void drawCircleDegree(int x,  int y, int degree = 360, int degreeOld = 0, int color = ST77XX_GREEN, int colorBackground = ST77XX_WHITE, int width = 4, int radius = 20, ScreenType type = ST7735);
 		void drawCpuCircle(int x,  int y, int coreIndex, int color = SSD1306_WHITE, ScreenType type=SSD1306);
-		void showSixCoreCpu(String cpuName, ScreenType type = ST7735, HardwareType hardware = Intel);
+		void show6CoreCpu(String cpuName, ScreenType type = ST7735, HardwareType hardware = Intel);
+		void show12CoreCpu(String cpuName, ScreenType type = ST7735, HardwareType hardware = Intel);
 		void printMSG(int lineNumber, const char* text, ScreenType type=SSD1306);
     private:
         WiFiClient esp32;         
         PubSubClient client;     
     	String sBrokerServer;                     
-        int iBrokerPort;                          
+        int iBrokerPort;
+		int iTicks;                          
         int iBrokerQoS = 0;   
 		int _iCpuClock[NUM_OF_CORES+1];
 		int _iCpuClockOld[NUM_OF_CORES+1];
@@ -107,6 +110,7 @@ class ESPJarvis {
 		void drawArc(int x, int y, int start_angle, int seg_count, int rx, int ry, int w, int colour, ScreenType type=SSD1306);
 		void ssd1306_drawCirclewithIcon(const uint8_t bitmap[],int degree, bool icon_left=true);
 		void initScreenBuffer();
+		void drawIcon(String cpuName, ScreenType type = ST7735, HardwareType hardware = Intel);
 		int _iBackgroundColour = ST77XX_MAGENTA;
 		DisplayMode _displayMode = DarkMode;
 
