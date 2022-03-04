@@ -1,20 +1,36 @@
 #ifndef _ESPJARVIS_H 
 #define _ESPJARVIS_H 
 
+/**
+ * @file ESPJarvis.h
+ * @author Frank Shen (shenchijun@gmail.com)
+ * @brief Home Assistant and Monitoring System based on ESP MCU
+ * @version 1.0
+ * @date 2022-03-04
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Wire.h>
 #include <HTTPClient.h> 
 #include <WiFiClient.h>
-#include <PubSubClient.h> 
+
+/**
+ * @brief third party library 
+ */
+#include <PubSubClient.h> // MQTT Client Support
 #include <Adafruit_GFX.h>   
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_ST7735.h>
 
 #define SOFTWARE_VERSION "V1.0"
-#define SCREEN_TEXT_PER_LINE 21
-#define SCREEN_LINE_OF_TEXT 8
-//Add defined RGB565 colour 
+
+/**
+ * @brief define some additional color for ST77XX
+ */
 #define ST77XX_GRAY 0x8410
 #define ST77XX_NAVY 0x000F
 #define ST77XX_DARKGREEN 0x03E0
@@ -25,8 +41,9 @@
 #define ST77XX_LIGHTGREY 0xC618
 #define ST77XX_DARKGREY 0x7BEF
 
-
-#define NUM_OF_CORES 10
+#define SCREEN_TEXT_PER_LINE 21
+#define SCREEN_LINE_OF_TEXT 8
+#define NUM_OF_CORES 20 //max number of cores
 
 enum ScreenType {
 	SSD1306,
@@ -46,17 +63,20 @@ enum DisplayMode {
 
 class ESPJarvis {
     public:
+		//Constructor
+		ESPJarvis();
         ESPJarvis(String sServer, int iPort = 1883);
         ESPJarvis(Adafruit_SSD1306 &screen, String sServer, int iPort = 1883);
 		ESPJarvis(Adafruit_ST7735 &screen, String sServer, int iPort = 1883);
+		//Method
         void attachScreen(Adafruit_SSD1306 &screen);
 		void attachScreen(Adafruit_ST7735 &screen);
         void setClientData(String sClientID, String sClientName, String sClientPassword);
         bool connect();
         int getServerState();
         void run();
-		void setMaxClockSpeed(int MaxClockSpeed);
-        void setMaxGPUFreq(int MaxGPUFreq);
+		bool setMaxClockSpeed(int iMaxClockSpeed);
+        void setMaxGPUFreq(int iMaxGPUFreq);
 		void setMqttTopicPrefix(String Prefix);
 		void setBackgroundColour(int colour);
 		void setDisplayMode(DisplayMode Mode=DarkMode);
@@ -75,8 +95,8 @@ class ESPJarvis {
     private:
         WiFiClient esp32;         
         PubSubClient client;     
-    	String sBrokerServer;                     
-        int iBrokerPort;
+    	String _sBrokerServer;                     
+        int _iBrokerPort;
 		int iTicks;                          
         int iBrokerQoS = 0;   
 		int _iCpuClock[NUM_OF_CORES+1];
@@ -85,9 +105,9 @@ class ESPJarvis {
 		int _iCpuLoadOld[NUM_OF_CORES+1];
 		int _iCpuTemp[NUM_OF_CORES+1];
 		int _iCpuTempOld[NUM_OF_CORES+1];                   
-        String sBrokerClientID;   
-        String sBrokerClientName;       
-        String sBrokerClientPassword;    
+        String _sBrokerClientID;   
+        String _sBrokerClientName;       
+        String _sBrokerClientPassword;    
 		String _sMqttTopicPrefix = "rpi";
         char cMQTTPayload[100];
 		char cScreenBuffer[SCREEN_TEXT_PER_LINE*SCREEN_LINE_OF_TEXT+1];

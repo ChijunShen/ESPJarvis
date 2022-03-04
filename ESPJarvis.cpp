@@ -2,47 +2,139 @@
 
 /**
  * Constructor
- * @param sServer IP Address of the MQTT Broker
- * @param Port Port number of the MQTT Broker
- * @brief initialize the class with information of the MQTT Broker
- */
-ESPJarvis::ESPJarvis(String sServer, int iPort) {
-    sBrokerServer = sServer;
-    iBrokerPort = iPort;
-    initScreenBuffer();    
+ * @brief initialize the object
+ * */
+ESPJarvis::ESPJarvis() {
 }
 
+/**
+ * Constructor
+ * @param sServer IP Address of the MQTT Broker
+ * @param iPort Port number of the MQTT Broker
+ * @brief initialize the object with information of the MQTT Broker
+ */
+ESPJarvis::ESPJarvis(String sServer, int iPort) {
+    _sBrokerServer = sServer;
+    _iBrokerPort = iPort; 
+}
+
+/**
+ * Constructor
+ * @param screen reference to SSD1306 Object
+ * @param sServer IP Address of the MQTT Broker
+ * @param iPort Port number of the MQTT Broker
+ * @brief initialize the object with information of the MQTT Broker and SSD1306 Screen
+ */
 ESPJarvis::ESPJarvis(Adafruit_SSD1306 &screen, String sServer, int iPort){
     _screen_ssd1306 = &screen;
-    sBrokerServer = sServer;
-    iBrokerPort = iPort;
+    _sBrokerServer = sServer;
+    _iBrokerPort = iPort;
     _bUseSSD1306 = true;
     initScreenBuffer();    
 }
 
+/**
+ * Constructor
+ * @param screen reference to ST7735 Object
+ * @param sServer IP Address of the MQTT Broker
+ * @param iPort Port number of the MQTT Broker
+ * @brief initialize the object with information of the MQTT Broker and ST77352Screen
+ */
 ESPJarvis::ESPJarvis(Adafruit_ST7735 &screen, String sServer, int iPort){
     _screen_st7735 = &screen;
-    sBrokerServer = sServer;
-    iBrokerPort = iPort;
+    _sBrokerServer = sServer;
+    _iBrokerPort = iPort;
     _bUseST7735 = true;
     initScreenBuffer();    
 }
 
+/**
+ * Method
+ * @param screen reference to SSD1306 Object
+ * @brief add reference to SSD1306 Object
+ */
 void ESPJarvis::attachScreen(Adafruit_SSD1306 &screen){
     _screen_ssd1306 = &screen;
-    _bUseSSD1306 = true;
+    _bUseSSD1306 = true;  
 }
 
+/**
+ * Method
+ * @param screen reference to ST7735 Object
+ * @brief add reference to ST7735 Object
+ */
 void ESPJarvis::attachScreen(Adafruit_ST7735 &screen){
     _screen_st7735 = &screen;
     _bUseST7735 = true;
     _screen_st7735->fillScreen(_iBackgroundColour);
 }
 
+/**
+ * Method
+ * @param sClientID client id of MQTT Client
+ * @param sClientName client name of MQTT Client
+ * @param sClientPassword password of MQTT Client
+ * @brief set the data of MQTT Client
+ */
 void ESPJarvis::setClientData(String sClientID, String sClientName, String sClientPassword){
-    sBrokerClientID = sClientID;
-    sBrokerClientName = sClientName;
-    sBrokerClientPassword = sClientPassword;
+    _sBrokerClientID = sClientID;
+    _sBrokerClientName = sClientName;
+    _sBrokerClientPassword = sClientPassword;
+}
+
+/**
+ * Method
+ * @return ture if MQTT Broker is connected and false if not
+ * @brief connect MQTT Broker
+ */
+bool ESPJarvis::connect(){
+   return connectMQTTBroker(this->_sBrokerClientName, this->_sBrokerClientPassword, this->_sBrokerClientID, this->_sBrokerServer, this->_iBrokerPort); 
+}
+
+/**
+ * Method
+ * @return status code of MQTT Broker
+ * @brief get the status code of MQTT Broker
+ */
+int ESPJarvis::getServerState(){
+    return client.state();
+}
+
+/**
+ * Method
+ * @brief loop funtion of ESPJarvis 
+ */
+void ESPJarvis::run(){
+   client.loop();; 
+}
+
+/**
+ * Method
+ * @param iMaxClockSpeed max clock speed of the cpu, if it is with multi cores, please set with the highest clock speed among all the cores 
+ * @return true if the max clock speed is set and false if not
+ * @brief set the max clock speed of the cpu 
+ */
+bool ESPJarvis::setMaxClockSpeed(int iMaxClockSpeed)
+{
+    if(iMaxClockSpeed > 0){
+        _iMaxClockSpeed = iMaxClockSpeed;
+        return true;
+    }else{
+        return false;
+    }
+}
+
+/**
+ * Method
+ * @param iMaxGPUFreq max frequency of the GPU
+ * @return true if the max GPU frequency is set and false if not
+ * @brief set the max frequency of the GPU
+ */
+void ESPJarvis::setMaxGPUFreq(int iMaxGPUFreq)
+{
+    if(iMaxGPUFreq > 0){
+        _iMaxGPUFreq = iMaxGPUFreq;
+    }
 }
 
 void ESPJarvis::MQTTCallbackFunction(char *topic, byte *payload, unsigned int length) {
@@ -72,13 +164,13 @@ void ESPJarvis::MQTTCallbackFunction(char *topic, byte *payload, unsigned int le
     // }
 
     //for pc
-    for(int i=1; i<(NUM_OF_CORES+1) ; i++){
+    for(int i=NUM_OF_CORES+1; i>0 ; i--){
         if(sTopic.indexOf(("k_"+String(i)).c_str())>0){
             _iCpuClock[i] = String(cMQTTPayload).toInt();  
             return;
         }
     }
-    for(int i=1; i<(NUM_OF_CORES+1) ; i++){
+    for(int i=NUM_OF_CORES+1; i>0 ; i--){
         if(sTopic.indexOf(("p_"+String(i)).c_str())>0){
             _iCpuTemp[i] = String(cMQTTPayload).toInt();  
             return;
@@ -111,17 +203,6 @@ bool ESPJarvis::connectMQTTBroker(String sClientName, String sClientPassword, St
      }
 }
 
-void ESPJarvis::run(){
-   client.loop();; 
-}
-
-bool ESPJarvis::connect(){
-   return connectMQTTBroker(this->sBrokerClientName, this->sBrokerClientPassword, this->sBrokerClientID, this->sBrokerServer, this->iBrokerPort); 
-}
-
-int ESPJarvis::getServerState(){
-    return client.state();
-}
 
 // x,y == coords of centre of arc
 // start_angle = 0 - 359
@@ -166,18 +247,7 @@ void ESPJarvis::drawArc(int x, int y, int start_angle, int seg_count, int rx, in
     y1 = y3;
   }
 }
-void ESPJarvis::setMaxClockSpeed(int MaxClockSpeed)
-{
-    if(MaxClockSpeed > 0){
-        _iMaxClockSpeed = MaxClockSpeed;
-    }
-}
-void ESPJarvis::setMaxGPUFreq(int MaxGPUFreq)
-{
-    if(MaxGPUFreq > 0){
-        _iMaxGPUFreq = MaxGPUFreq;
-    }
-}
+
 void ESPJarvis::showCPUGPUPage(ScreenType type){
     int iGPUFreq=sGpuFreq.toInt();
     int iCPUTemp=sCpuTemp.toInt();
@@ -307,7 +377,11 @@ void ESPJarvis::drawCpuCircle(int x,  int y, int coreIndex, int color, ScreenTyp
             drawCircleDegree(x, y,  (int)(_iCpuClock[coreIndex]*360/_iMaxClockSpeed), (int)(_iCpuClockOld[coreIndex]*360/_iMaxClockSpeed), color, ST77XX_GRAY);
             //_screen_st7735->fillCircle(x, y, 15, _iBackgroundColour);
             _screen_st7735->setTextColor(ST77XX_GRAY);
-            _screen_st7735->setCursor(x-2, y-13);
+            if(coreIndex<10){
+                _screen_st7735->setCursor(x-2, y-13);                    
+            }else{
+                _screen_st7735->setCursor(x-6, y-13);
+            }
             _screen_st7735->print(coreIndex);
             if(_iCpuClock[coreIndex] != _iCpuClockOld[coreIndex]){
                 _screen_st7735->fillRect(x-12, y-4, 25, 7, _iBackgroundColour);
@@ -355,16 +429,17 @@ void ESPJarvis::setDisplayMode(DisplayMode Mode){
             _screen_st7735->fillScreen(_iBackgroundColour);
             for(int i=1; i<NUM_OF_CORES+1; i++){
                 _iCpuClockOld[i] = 0;
-                _iCpuTemp[i] = 0;
+                _iCpuTempOld[i] = 0;
             }
             _displayMode = DayMode;
             break;
         case DarkMode:
             setBackgroundColour(ST77XX_BLACK);
             _screen_st7735->fillScreen(_iBackgroundColour);
+            _iCpuClockOld[1] = 0;
             for(int i=1; i<NUM_OF_CORES+1; i++){
                 _iCpuClockOld[i] = 0;
-                _iCpuTemp[i] = 0;
+                _iCpuTempOld[i] = 0;
             }
             _displayMode = DarkMode;
             break;
@@ -424,39 +499,22 @@ void ESPJarvis::show12CoreCpu(String cpuName, ScreenType type, HardwareType hard
         if(_iCpuClockOld[1] ==0 ){
             _screen_st7735->fillScreen(_iBackgroundColour);
             drawIcon(cpuName, type, hardware);
-            iTicks = 0;            
-            switch (_displayMode)
-            {
-            case DayMode:
-                drawCpuCircle(22, 20, 1, ST77XX_BLUE, ST7735);
-                drawCpuCircle(64, 20, 2, ST77XX_BLUE, ST7735);
-                drawCpuCircle(107, 20, 3, ST77XX_BLUE, ST7735);
-                drawCpuCircle(22, 62, 4, ST77XX_BLUE, ST7735);
-                drawCpuCircle(64, 62, 5, ST77XX_BLUE, ST7735);
-                drawCpuCircle(107, 62, 6, ST77XX_BLUE, ST7735);
-                break;
-            case DarkMode:
-                drawCpuCircle(22, 20, 1, ST77XX_RED, ST7735);
-                drawCpuCircle(64, 20, 2, ST77XX_RED, ST7735);
-                drawCpuCircle(107, 20, 3, ST77XX_RED, ST7735);
-                drawCpuCircle(22, 62, 4, ST77XX_RED, ST7735);
-                drawCpuCircle(64, 62, 5, ST77XX_RED, ST7735);
-                drawCpuCircle(107, 62, 6, ST77XX_RED, ST7735);
-                break;            
-            default:
-                break;
-            }
+            _iCpuClockOld[1] = 1;            
         }else{
             iTicks ++;
             if(iTicks>200) iTicks=0;
             switch (_displayMode)
             {
             case DayMode:
-                 if(iTicks==0){
+                if(iTicks==0){
                     setDisplayMode(DayMode);
                     drawIcon(cpuName, type, hardware);
                 }
                 if(iTicks==100){
+                    if(_iCpuClock[7] ==0 ) {
+                        iTicks=1;
+                        break;
+                    }
                     setDisplayMode(DayMode);
                     drawIcon(cpuName, type, hardware);
                 }
@@ -467,7 +525,7 @@ void ESPJarvis::show12CoreCpu(String cpuName, ScreenType type, HardwareType hard
                     drawCpuCircle(22, 62, 4, ST77XX_BLUE, ST7735);
                     drawCpuCircle(64, 62, 5, ST77XX_BLUE, ST7735);
                     drawCpuCircle(107, 62, 6, ST77XX_BLUE, ST7735);
-                }else{
+                }else if(iTicks>100){
                     drawCpuCircle(22, 20, 7, ST77XX_BLUE, ST7735);
                     drawCpuCircle(64, 20, 8, ST77XX_BLUE, ST7735);
                     drawCpuCircle(107, 20, 9, ST77XX_BLUE, ST7735);
@@ -482,6 +540,10 @@ void ESPJarvis::show12CoreCpu(String cpuName, ScreenType type, HardwareType hard
                     drawIcon(cpuName, type, hardware);
                 }
                 if(iTicks==100){
+                    if(_iCpuClock[7] ==0 ) {
+                        iTicks=1;
+                        break;
+                    }
                     setDisplayMode(DarkMode);
                     drawIcon(cpuName, type, hardware);
                 }
@@ -492,7 +554,7 @@ void ESPJarvis::show12CoreCpu(String cpuName, ScreenType type, HardwareType hard
                     drawCpuCircle(22, 62, 4, ST77XX_RED, ST7735);
                     drawCpuCircle(64, 62, 5, ST77XX_RED, ST7735);
                     drawCpuCircle(107, 62, 6, ST77XX_RED, ST7735);
-                }else{
+                }else if(iTicks>100){
                     drawCpuCircle(22, 20, 7, ST77XX_RED, ST7735);
                     drawCpuCircle(64, 20, 8, ST77XX_RED, ST7735);
                     drawCpuCircle(107, 20, 9, ST77XX_RED, ST7735);
